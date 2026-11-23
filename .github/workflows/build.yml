@@ -22,7 +22,7 @@ jobs:
           git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/${{ env.CLANG_BRANCH }} clang
           echo "PATH=$PWD/clang/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Download GKI kernel source ${{ env.KERNEL_VERSION }}
+      - name: Download GKI kernel source
         run: |
           git clone --depth=1 --branch=${{ env.KERNEL_VERSION }} https://android.googlesource.com/kernel/common kernel
           cd kernel
@@ -34,22 +34,18 @@ jobs:
           KDIR=$PWD/kernel
           make -C ${KDIR} M=$PWD LLVM=1 ARCH=${{ env.ARCH }} modules
 
-      - name: Pack KSU module zip
+      - name: Pack module zip
         run: |
           mkdir -p out
           cp uidhide.ko out/
-          cat > out/module.prop <<EOF
-id=uidhide
-name=UIDHide
-version=1.0
-versionCode=1
-author=longze777
-description=UID hide LKM module
-EOF
-          cat > out/post-fs-data.sh <<EOF
-#!/system/bin/sh
-insmod \${MODDIR}/uidhide.ko
-EOF
+          echo "id=uidhide" > out/module.prop
+          echo "name=UIDHide" >> out/module.prop
+          echo "version=1.0" >> out/module.prop
+          echo "versionCode=1" >> out/module.prop
+          echo "author=longze777" >> out/module.prop
+          echo "description=UID hide LKM module" >> out/module.prop
+          echo "#!/system/bin/sh" > out/post-fs-data.sh
+          echo "insmod \${MODDIR}/uidhide.ko" >> out/post-fs-data.sh
           chmod +x out/post-fs-data.sh
           cd out
           zip -r uidhide.zip .
